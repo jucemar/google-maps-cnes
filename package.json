@@ -16,5 +16,13 @@
   "bugs": {
     "url": "https://github.com/jucemar/maps-acs-bigua/issues"
   },
-  "homepage": "https://github.com/jucemar/maps-acs-bigua#readme"
+  "homepage": "https://github.com/jucemar/maps-acs-bigua#readme",
+  "dependencies": {
+    "@google/markerclusterer": "^1.0.3",
+    "fs": "0.0.1-security"
+  },
+  "devDependencies": {
+    "browserify": "^16.2.3",
+    "convert-csv-to-json": "0.0.14"
+  }
 }

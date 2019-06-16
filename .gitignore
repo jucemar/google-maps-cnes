@@ -59,3 +59,8 @@ typings/
 
 # next.js build output
 .next
+
+# Exclude big files mnre than 100MB
+src/cnes.json
+src/cnes.csv
+
