@@ -1,4 +1,5 @@
 body, html {
+ 
   height: 100%;
   padding: 0;
   margin: 0;
@@ -14,15 +15,21 @@ body, html {
   border: 1px solid black
 }
 
-.info-window{  
-  line-height: 0.3em;
-}
+.info-window{
 
-.info-window hr{
-  margin-top: -7px;
+}
+.info-window.title{  
+  line-height: 0.5em;
+  font-weight: 600;
+  font-size: 13px;
   
 }
 
+
 .info-window p{
-  font-size: 8pt;
+  font:400 11px 'Roboto', 'Arial', 'sans-serif';
+  line-height: .3em;
+
 }
+
+

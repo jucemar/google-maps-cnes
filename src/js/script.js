@@ -1,3 +1,4 @@
+let infoWindow = null
 
 function initMap() {
 
@@ -7,7 +8,7 @@ function initMap() {
     })
     .then(json => {
       const maps = new google.maps.Map(document.getElementById('map'), {
-        zoom: 10,
+        zoom: 9,
         center: { lat: -27.494872241197, lng: -48.6541986465454 },
         streetViewControl: false,
         scrollwheel: true
@@ -15,56 +16,53 @@ function initMap() {
       return { maps, json }
     })
     .then(({ maps, json }) => {
-     
+
       let markers = json.map((location) => {
 
 
-       
+
         let marker = new google.maps.Marker({
           position: new google.maps.LatLng(location.lat, location.lng),
-          cursor:'pointer',
+          cursor: 'pointer',
           map: maps,
-          draggable:false,
-          
-        }) 
-        
-        addDadosNoEstabelecimento(marker,location)
+          draggable: false,
+
+        })
+
+        addDadosNoEstabelecimento(marker, location)
 
 
-      
+
         return marker
       })
-      /*   let markerCluster = new MarkerClusterer(maps, markers,
-        {imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'}) */
+      let mcOptions = {
+        gridSize: 50,
+        maxZoom: 15,
+        imagePath: 'https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m'}
+      let markerCluster = new MarkerClusterer(maps, markers, mcOptions)
+    
     })
 
 }
 
 function addDadosNoEstabelecimento(marker, dados) {
-  let infowindow = new google.maps.InfoWindow({
-    content: `
-    <div class="info-window">
-    <h4>${dados.nome.toUpperCase()}</h4>
-    <hr>
-    <p><i>${dados.tipo.toUpperCase()}</i></p>
-    <p>CNES: ${dados.cnes.toUpperCase()}</p>
-    <p>Bairro: ${dados.bairro.toUpperCase()}</p>
-    <p>Telefone: ${dados.telefone.toUpperCase()}</p>
-    </div>`,
-    disableAutoPan:true
-  });
 
-  marker.addListener('mouseover', function() {
-    infowindow.open(marker.get('map'), marker);
-  })
-  marker.addListener('mouseout', function() {
-    infowindow.close()
+
+  marker.addListener('click', function () {
+    if (infoWindow) {
+      infoWindow.close()
+    }
+    infoWindow = new google.maps.InfoWindow()
+    infoWindow.setContent(`
+    <div class="info-window">
+    <p class="info-window title">${dados.nome.toUpperCase()}</p>
+    <p>${dados.tipo.toUpperCase()}</p>
+    <p>${dados.logradouro.toUpperCase()}, ${dados.numero.toUpperCase()}</p>    
+    <p>${dados.municipio.toUpperCase()} - ${dados.uf.toUpperCase()}</p>
+    <p>${dados.bairro.toUpperCase()}</p>
+    <p>${dados.cep.toUpperCase()}</p>
+    <p>${dados.telefone.toUpperCase()}</p>
+    </div>`)
+    infoWindow.open(marker.get('map'), marker);
   })
 }
-
-
-
-
-
-
-
