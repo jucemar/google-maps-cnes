@@ -61,6 +61,9 @@ typings/
 .next
 
 # Exclude big files mnre than 100MB
-src/cnes.json
-src/cnes.csv
+cnes.json
+
+# Exclude folder with build files
+public/
+
 
