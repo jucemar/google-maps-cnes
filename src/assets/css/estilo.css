@@ -1,0 +1,142 @@
+html{
+height: 100vh;
+}
+
+body{ 
+  padding: 0;
+  margin: 0; 
+  height: 100%;
+  display: grid;
+  grid-template-columns: 7fr 4fr;
+}
+
+#map {
+  height: 100%;  
+
+}
+
+#show {  
+  display: grid;
+  grid-template-rows: 95px 1fr 60px;
+  overflow: auto;
+
+}
+
+.table-head{
+  font-weight: bolder;
+  
+}
+
+footer{
+  background-color: #f1f1f1;
+  color: #000;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 10px;  
+  padding: 5px;  
+  line-height: 1.8em;
+  text-align: right;
+
+  
+  /*
+  #00ccff azul claro
+  #f1f1f1 cinza
+  */
+
+  
+
+}
+
+section{ 
+  padding: 10px;
+  font-family: 'Montserrat', sans-serif;
+
+
+  
+ 
+}
+
+header{
+  text-align: center;
+  padding: 5px;
+  background-color: #1b5fc0;
+
+}
+
+.destaque{
+  z-index: 2000;
+}
+
+
+
+fieldset{
+  padding: 10px;
+  border: 1px solid gray;
+  border-radius: 5px;  
+  font-family: 'Roboto', sans-serif;
+  font-size: 12px;  
+}
+#arquivos{
+  border: 1px solid gray;
+
+}
+
+#arquivos>input{
+  width: 70%;
+}
+
+fieldset>legend{  
+  font-weight: bold;
+}
+
+fieldset+fieldset{
+  margin-top: 10px;
+}
+
+table{
+   width: 100%;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 11px;
+  line-height: 1.8em;
+  vertical-align: middle;
+
+
+}
+
+.tr-estabelecimento{  
+  cursor: pointer;
+  
+}
+
+.tr-clicked .tr-clicked:hover{
+  background-color: #1b5fc0;
+  color: #fff;
+}
+.tr-estabelecimento:hover{
+  background-color: lightgrey;
+  color: #000;
+}
+
+#comboUf, #comboMunicipio{
+  font-size: 12px;
+  font-family: 'Roboto', sans-serif;
+}
+
+.info-window.title{    
+  font-weight: 600;
+  font-size: 12px; 
+  font-family: 'Roboto', sans-serif; 
+}
+
+
+.info-window p{
+  font:400 10px 'Montserrat', 'Arial', 'sans-serif';
+}
+
+
+.loadMap {
+	background: url(../images/map-preloader.gif) center no-repeat #fff;
+}
+
+.load-field{
+  background: url(../images/fieldset-preloader.gif) right no-repeat #fff;  
+}

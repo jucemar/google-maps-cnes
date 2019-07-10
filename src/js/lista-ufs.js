@@ -1,4 +1,4 @@
-const ufs = [
+export const UFS = [
     {id:11,	nome:'Rondônia', sigla:'RO'},
     {id:12, nome:'Acre', sigla:'AC'},
     {id:13, nome:'Amazonas', sigla:'AM'},
