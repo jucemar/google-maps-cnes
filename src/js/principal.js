@@ -5,14 +5,15 @@ import '../assets/css/reset.css'
 import '../assets/css/estilo.css'
 import * as Papa from 'papaparse'
 import { Chart } from 'chart.js'
-
-
+import { LatLonUfs } from './lat-lon-ufs'
 
 let mapa, divHtml, googleMapsApi, comboUf, comboMunicipio, infoWindow,
   markers, markerClusterer, btnFiltrar, estabelecimentos, initLatLng,
-  mapEstabMarker, animatedMarker, trClicked, loadMap, inputFile, progresso, fieldArquivos, fieldFiltros, dataDashboard,grafico, chart
+  mapEstabMarker, animatedMarker, trClicked, loadMap, inputFile,
+  fieldArquivos, fieldFiltros, dataDashboard, canvas01Ctx, chart01, progresso,titleLoadedFile, file
 
-chart=null  
+chart01 = null
+file=null
 comboMunicipio = document.getElementById('comboMunicipio')
 fieldArquivos = document.getElementById('arquivos')
 fieldFiltros = document.getElementById('filtros')
@@ -20,8 +21,9 @@ comboUf = document.getElementById('comboUf')
 btnFiltrar = document.getElementById('btn-filtrar')
 inputFile = document.getElementById('inputFile')
 progresso = document.getElementById('progresso')
-grafico = document.getElementById('grafico').getContext('2d')
-initLatLng = { lat: -13.6628064, lng: -69.6464904 }
+titleLoadedFile=document.getElementById('loadedFile')
+canvas01Ctx=null
+initLatLng = { lat: -10.3333333, lng: -53.2 }
 loadMap = 'loadMap'
 infoWindow = null
 markers = null
@@ -32,7 +34,6 @@ mapEstabMarker = null
 animatedMarker = null
 trClicked = null
 dataDashboard = null
-
 divHtml = document.getElementById('mapa')
 divHtml.classList.add(loadMap)
 
@@ -43,33 +44,30 @@ GoogleMapsApi.config()
   })
   .then((api) => {
     criarMapa(api)
-    divHtml.classList.remove(loadMap)
+    divHtml.style.hidden=true
     iniciaFormulario()
   })
 
 function criarMapa(api) {
   mapa = new api.Map(divHtml, {
     center: initLatLng,
-    zoom: 2
+    zoom: 4
   })
 }
 
 function iniciaFormulario() {
   comboUf.addEventListener('change', carregarMunicipios)
+  comboMunicipio.addEventListener('change', centralizarCidadeMapa)
   inputFile.addEventListener('change', carregarArquivo, false)
   btnFiltrar.addEventListener('click', carregaEstabelecimentos)
 }
 
-
-
 function carregarArquivo() {
-  fieldArquivos.classList.add('load-field')
-  fieldFiltros.classList.add('load-field')
-  let file = this.files[0]
+  file = this.files[0]
   if (this.files.length > 0) {
+    fieldArquivos.classList.add('load-field')
+    fieldFiltros.classList.add('load-field')    
     convertToJSON(file)
-  } else {
-    window.alert('Você deve selecionar um arquivo')
   }
 }
 
@@ -77,11 +75,14 @@ function convertToJSON(zip) {
   Papa.parse(zip, {
     header: true,
     dynamicTyping: true,
-    fastMode: true,
     complete: function (results, file) {
-      estabelecimentos = results.data
-      fieldArquivos.classList.remove('load-field')
-      carregarEstados()
+      if(results.data[0].IBGE){
+        estabelecimentos = results.data
+        titleLoadedFile.textContent=file.name
+        carregarEstados() 
+      }else{
+        mostrarErroNoArquivo()
+      }
     },
     trimHeaders: true,
     transformHeader: function (header) {
@@ -90,11 +91,19 @@ function convertToJSON(zip) {
   })
 }
 
+function mostrarErroNoArquivo(){
+  titleLoadedFile.textContent='Arquivo inválido'
+  fieldArquivos.classList.remove('load-field')
+  fieldFiltros.classList.remove('load-field')
+}
+
+
 function carregarEstados() {
   limparElementoCombo(comboUf)
+  fieldArquivos.classList.remove('load-field')
   let ufs = estabelecimentos.map((e) => e.UF)
     .filter((value, index, array) => {
-      if (array.indexOf(value) == index && value) {
+      if (array.indexOf(value) === index && value) {
         return true
       } else {
         return false
@@ -107,14 +116,12 @@ function carregarEstados() {
     comboUf.appendChild(optionTag)
   }
   fieldFiltros.classList.remove('load-field')
-
 }
-
 
 function ordenarEmOrdemAlfabetica(array) {
   return array.sort((a, b) => {
-    if (a > b) return 1
-    if (a < b) return -1
+    if (a.nome > b.nome) return 1
+    if (a.nome < b.nome) return -1
     return 0
   })
 }
@@ -123,43 +130,56 @@ function carregarMunicipios(event) {
   fieldFiltros.classList.add('load-field')
   limparElementoCombo(comboMunicipio)
   let uf = event.target.value
-  console.log(uf)
+  if(uf==='Selecione'){
+    resetMapa()
+  }else{
+  centralizaUfMapa(uf)
   let municipios = estabelecimentos
     .filter(value => value.UF === uf)
-    .map(e => e.MUNICIPIO)
+    .map(e => {
+      return {nome:e.MUNICIPIO,codigo:e.IBGE}
+    })
     .filter((value, index, array) => {
-      if (array.indexOf(value) == index && value) { return true }
+      let i=array.findIndex((current=>current.codigo===value.codigo))
+      if (i===index) { return true }
       else { return false }
     })
-
   for (let municipio of ordenarEmOrdemAlfabetica(municipios)) {
     let optionTag = document.createElement('option')
-    optionTag.setAttribute('value', municipio)
-    optionTag.innerHTML = municipio
+    optionTag.setAttribute('value', municipio.codigo)
+    optionTag.innerHTML = municipio.nome
     comboMunicipio.appendChild(optionTag)
   }
-  fieldFiltros.classList.remove('load-field')
+
+}
+fieldFiltros.classList.remove('load-field')
 }
 
+function centralizaUfMapa(uf){
+  let geoUf=LatLonUfs.get(uf)
+  mapa.panTo({lat:geoUf.lat,lng:geoUf.lon})
+  mapa.setZoom(7)
+}
 
-
-
-
-
-
-
-
-/*   fetch(`http://servicodados.ibge.gov.br/api/v1/localidades/estados/${id}/municipios`)
-    .then(response => response.json())
-    .then(json => json.map(data => { return { id: data.id, nome: data.nome } }))
-    .then(municipios => {
-      for (let municipio of ordenarEmOrdemAlfabetica(municipios)) {
-        let optionTag = document.createElement('option')
-        optionTag.setAttribute('value', municipio.id)
-        optionTag.innerHTML = municipio.nome
-        comboMunicipio.appendChild(optionTag)
+function centralizarCidadeMapa(){ 
+  let ibge=comboMunicipio.value 
+  fetch('./lat-lon-munic.json').then(response=>response.json()).then(json=>{
+    return json.find(value=>{ 
+      let s=new String(value.codigo_ibge)
+      if(s.startsWith(ibge)){
+        return true
+      }else{
+        return false
       }
-    }) */
+    })
+  }).then(mun=>{
+    //console.log(`estabelecimento ${mun.codigo_ibge}`)
+    mapa.panTo({lat:mun.lat,lng:mun.lon})
+    mapa.setZoom(11)
+  })    
+
+
+}
 
 
 function limparElementoCombo(el) {
@@ -183,106 +203,88 @@ function limparElementoTable(el) {
 }
 
 function carregaEstabelecimentos() {
-  let municipio = comboMunicipio.value
+  let ibgeSelecionado = new String(comboMunicipio.value)
+  let municipio=ibgeSelecionado.substring(0,7)
+  console.log(municipio)
   buscarEstabelecimentos(municipio)
 }
 
 function resetMapa() {
   mapa.panTo(initLatLng)
-  mapa.setZoom(5)
+  mapa.setZoom(4)
 }
 
-
 function buscarEstabelecimentos(municipio) {
-  let estabelecimentosFiltrados = estabelecimentos.filter(value => value.MUNICIPIO === municipio)
-  console.table(estabelecimentosFiltrados)
-  dataDashboard = new DataDashboard(estabelecimentosFiltrados)
-  grafico.clear()
-
-  chart = new Chart(grafico, {
-    type: 'polarArea',
-    data: {
-      labels: ['Estabelecimentos sem geoLocalização', 'Totais de estabelecimentos', 'Estabelecimentos com geolocalização'],
-      datasets: [{
-        label: '# of Votes',
-        data: [dataDashboard.totalEstabelecimentosSemGeo, dataDashboard.totalEstabelecimentos, dataDashboard.totalEstabelecimentosComGeo],
-        backgroundColor: [
-          'rgba(226, 21, 21, 0.2)',
-          'rgba(27, 95, 192, 0.2)',
-          'rgba(8, 140, 30, 0.2)'
-        ],
-        borderColor: [
-          'rgba(226, 21, 21, 1)',
-          'rgba(27, 95, 192, 1)',
-          'rgba(8, 140, 30, 1)'
-        ],
-        borderWidth: 0.5
-      }]
-
-    },
-    options: {      
-      maintainAspectRatio: true,
-      legend: {
-        display: true,
-        position: 'right'
-      },
-      rotation: -1.5 * Math.PI
-    }
-  })
-
-  
-
-
-
-
+  let estabelecimentosFiltrados = estabelecimentos.filter(value => value.IBGE == municipio)
   estabelecimentosFiltrados.sort((a, b) => {
     if (a.NOME_FANTASIA > b.NOME_FANTASIA) return 1
     if (a.NOME_FANTASIA < b.NOME_FANTASIA) return -1
     return 0
   })
-
-
-
+  console.log(estabelecimentosFiltrados)
+  canvas01Ctx = document.getElementById('grafico1').getContext('2d')
+  dataDashboard = new DataDashboard(estabelecimentosFiltrados)
   criarMarkers(estabelecimentosFiltrados)
-  resetMapa()
   exibirEstabelecimentos(estabelecimentosFiltrados)
+  mostrarGraficos(estabelecimentosFiltrados)
 }
 
-
-/*   if (estabelecimentos) {
-    estabelecimentos.splice(0, estabelecimentos.length);
+function mostrarGraficos(estabelecimentos) {
+  if (chart01) {
+    chart01.destroy()
   }
-  fetch(`http://localhost:3000/estabelecimentos?ibge=${id.substring(0, 6)}`)
-    .catch(() => alert('erro'))
-    .then(response => {
-      return response.json()
-    }).then(data => {
-      estabelecimentos = data
-      criarMarkers(estabelecimentos)
-      resetMapa()
-    }).then(() => {
-      exibirEstabelecimentos()
-    }) */
 
+  chart01 = new Chart(canvas01Ctx, {
+    type: 'polarArea',
+    data: {
+      labels: [' Sem geolocalização', ' Totais cadastrados', ' Com geolocalização', ' Com geolocalização duvidosa'],
+      datasets: [{
+        data: [dataDashboard.totalEstabelecimentosSemGeo, dataDashboard.totalEstabelecimentos, dataDashboard.totalEstabelecimentosComGeo, dataDashboard._totalEstabelecimentosGeoDuvidosas.size],
+        backgroundColor: [
+          'rgba(226, 21, 21, 1)',
+          'rgba(27, 95, 192, 1)',
+          'rgba(8, 140, 30, 1)',
+          'rgba(255, 230, 0, 1)'
+        ]
+      }]
+    },
+    options: {
+      title: {
+        display: true,
+        position: 'top',
+        fontSize: '14',
+        text: 'Geolocalizaçoes'
+      },
+      maintainAspectRatio: true,
+      legend: {
+        display: true,
+        position: 'right'
+      }
+    }
+  })
+}
 
 function exibirEstabelecimentos(estabelecimentosFiltrados) {
-
   let areaResultados = document.getElementById('resultados')
   let resultadoVazio = document.getElementById('resultadoVazio')
   if (resultadoVazio) areaResultados.removeChild(document.getElementById('resultadoVazio'))
   let table = document.getElementById('tabela')
   limparElementoTable(table)
   let tr = document.createElement('tr')
+  let th0 = document.createElement('th')
   let th1 = document.createElement('th')
   let th2 = document.createElement('th')
   let th3 = document.createElement('th')
   let th4 = document.createElement('th')
   let th5 = document.createElement('th')
+  th0.textContent = 'ID'
   th1.textContent = 'CNES'
+  th2.setAttribute('style', 'text-align: left')
   th2.textContent = 'Nome fantasia'
   th3.textContent = 'Latitude'
   th4.textContent = 'Longitude'
   th5.textContent = 'Status'
+  tr.appendChild(th0)
   tr.appendChild(th1)
   tr.appendChild(th2)
   tr.appendChild(th3)
@@ -291,63 +293,64 @@ function exibirEstabelecimentos(estabelecimentosFiltrados) {
   tr.classList.add('table-head')
   table.appendChild(tr)
 
+  let indice = 1
   for (let estabelecimento of ordenarEmOrdemAlfabetica(estabelecimentosFiltrados)) {
-
-
     let tempMarker = mapEstabMarker.get(estabelecimento.CNES)
-
     let tr = document.createElement('tr')
     tr.classList.add('tr-estabelecimento')
+    let td0 = document.createElement('td')
+    td0.textContent = indice++
     let td1 = document.createElement('td')
     td1.textContent = estabelecimento.CNES
     let td2 = document.createElement('td')
     td2.textContent = estabelecimento.NOME_FANTASIA
+    td2.setAttribute('style', 'text-align: left')
     let td3 = document.createElement('td')
     td3.textContent = estabelecimento.LATITUDE
     let td4 = document.createElement('td')
     td4.textContent = estabelecimento.LONGITUDE
     let td5 = document.createElement('td')
-    let i = document.createElement('i')
-    let clss = estabelecimento.LATITUDE ? 'color: green;font-size:20px;padding-bottom:0; margin-bottom:0' : 'color: red;font-size:20px;padding-bottom:0; margin-bottom:0'
-    i.setAttribute('class', 'material-icons')
-    i.setAttribute('style', clss)
-    i.textContent = 'my_location'
-    td5.appendChild(i)
+    let icone = document.createElement('i')
+    let clss = () => {
+      if (estabelecimento.LATITUDE) {  
+        if(dataDashboard.totalEstabelecimentosGeoDuvidosas.has(estabelecimento.CNES)){
+          return 'color: rgba(255, 230, 0, 1); font-size:16px'
+        }else{
+          return 'color: rgba(8, 140, 30, 1); font-size:16px'
+        }
+        }else{
+        return 'color: rgba(226, 21, 21, 1); font-size:16px'
+      }
+    }
+    icone.setAttribute('class', 'material-icons')
+    icone.setAttribute('style', clss())
+    icone.textContent = 'my_location'
+    td5.appendChild(icone)
+    tr.appendChild(td0)
     tr.appendChild(td1)
     tr.appendChild(td2)
     tr.appendChild(td3)
     tr.appendChild(td4)
     tr.appendChild(td5)
     table.appendChild(tr)
-
-    if(!estabelecimento.LATITUDE){
-      tr.style.backgroundColor='rgba(226, 21, 21, 0.2)'
-    }
-
     tr.addEventListener('click', () => {
-
       mapEstabMarker.forEach((k, v) => {
         k.setAnimation(null)
       })
       tempMarker.setAnimation(googleMapsApi.Animation.BOUNCE)
-
       if (trClicked) {
         trClicked.classList.remove('tr-clicked')
       }
       trClicked = tr
       animatedMarker = estabelecimento.CNES
-      mapa.setZoom(18)
+      mapa.setZoom(21)
       mapa.panTo({ lat: Number(estabelecimento.LATITUDE), lng: Number(estabelecimento.LONGITUDE) })
       tr.classList.add('tr-clicked')
-
-
     })
   }
-
 }
 
 function toggleBounce(marker) {
-
   if (marker.getAnimation() != null) {
     marker.setAnimation(null);
   } else {
@@ -356,7 +359,6 @@ function toggleBounce(marker) {
 }
 
 function criarMarkers(estabelecimentos) {
-
   //Limpa todas as markers do mapa
   if (markers) {
     markerClusterer.clearMarkers()
@@ -380,7 +382,6 @@ function criarMarkers(estabelecimentos) {
   }
   markerClusterer = new MarkerClusterer(mapa, markers, mcOptions)
 }
-
 
 function addDadosNoEstabelecimento(marker, dados) {
   marker.addListener('click', function () {

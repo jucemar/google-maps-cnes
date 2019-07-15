@@ -15,7 +15,8 @@ body{
 
 }
 
-#show {  
+#show { 
+  background-color: #f8f9fa;
   display: grid;
   grid-template-rows: 95px 1fr 60px;
   overflow: auto;
@@ -23,8 +24,15 @@ body{
 }
 
 .table-head{
-  font-weight: bolder;
-  
+  font-weight: bolder;  
+}
+
+.table-head th{
+  vertical-align:middle;
+}
+
+#filtros>select{
+  margin-right: 15px;
 }
 
 footer{
@@ -40,10 +48,23 @@ footer{
   /*
   #00ccff azul claro
   #f1f1f1 cinza
+  #A1B2C2 cinza legal
   */
 
   
 
+}
+
+#loadedFile{
+  font-style: italic;
+}
+
+#labelFileLoaded{
+  font-weight:bold;
+}
+
+#fileLoadedArea{
+  margin-top:10px; 
 }
 
 section{ 
@@ -69,6 +90,7 @@ header{
 
 
 fieldset{
+  background-color: #fff;
   padding: 10px;
   border: 1px solid gray;
   border-radius: 5px;  
@@ -96,23 +118,22 @@ table{
    width: 100%;
   font-family: 'Montserrat', sans-serif;
   font-size: 11px;
-  line-height: 1.8em;
-  vertical-align: middle;
-
-
+  line-height: 1.8em;  
+  text-align: center;
 }
+
 
 .tr-estabelecimento{  
   cursor: pointer;
   
 }
 
-.tr-clicked .tr-clicked:hover{
-  background-color: #1b5fc0;
-  color: #fff;
+.tr-clicked {
+  background-color:#f1f1f1;
+ 
 }
 .tr-estabelecimento:hover{
-  background-color: lightgrey;
+  background-color: #f1f1f1;
   color: #000;
 }
 
